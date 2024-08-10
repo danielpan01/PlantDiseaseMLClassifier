@@ -5,27 +5,40 @@ from pathlib import Path
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, confusion_matrix, ConfusionMatrixDisplay
 import matplotlib.pyplot as plt
+import time
 
 def load_data():
-    path_healthy = Path("PlantVillage/Tomato_healthy")
-    path_unhealthy = Path("PlantVillage/Tomato_Early_blight")
+    base_path = Path("PlantVillage")
+    class_folders = {
+        "Pepper__bell___Bacterial_spot": 1,
+        "Pepper__bell___healthy": 0,
+        "Potato___Early_blight": 1,
+        "Potato___healthy": 0,
+        "Potato___Late_blight": 1,
+        "Tomato__Target_Spot": 1,
+        "Tomato__Tomato_mosaic_virus": 1,
+        "Tomato__Tomato_YellowLeaf__Curl_Virus": 1,
+        "Tomato_Bacterial_spot": 1,
+        "Tomato_Early_blight": 1,
+        "Tomato_healthy": 0,
+        "Tomato_Late_blight": 1,
+        "Tomato_Leaf_Mold": 1,
+        "Tomato_Septoria_leaf_spot": 1,
+        "Tomato_Spider_mites_Two_spotted_spider_mite": 1
+    }
 
     inputs = []
     targets = []
 
     image_size = (128, 128)
 
-    for filename in sorted(path_healthy.iterdir()):
-        img = Image.open(filename).convert('RGB').resize(image_size)
-        img = np.array(img).flatten()
-        inputs.append(img)
-        targets.append(0)
-
-    for filename in sorted(path_unhealthy.iterdir()):
-        img = Image.open(filename).convert('RGB').resize(image_size)
-        img = np.array(img).flatten()
-        inputs.append(img)
-        targets.append(1)
+    for folder_name, label in class_folders.items():
+        folder_path = base_path / folder_name
+        for filename in sorted(folder_path.iterdir()):
+            img = Image.open(filename).convert('RGB').resize(image_size)
+            img = np.array(img).flatten()
+            inputs.append(img)
+            targets.append(label)
 
     inputs = np.array(inputs)
     targets = np.array(targets)
@@ -59,7 +72,18 @@ def display_confusion_matrix(target, predictions, labels=['Healthy', 'Unhealthy'
     ax.set_title(plot_title)
     plt.show()
 
+start_time = time.time()
 inputs, targets = load_data()
+print(f"Data loading took: {time.time() - start_time:.2f} seconds")
+
+start_time = time.time()
 inputs_train, inputs_test, targets_train, targets_test = preprocess(inputs, targets)
+print(f"Data preprocessing took: {time.time() - start_time:.2f} seconds")
+
+start_time = time.time()
 model = train_model(inputs_train, targets_train)
+print(f"Model training took: {time.time() - start_time:.2f} seconds")
+
+start_time = time.time()
 evaluate_model(model, inputs_test, targets_test)
+print(f"Model evaluation took: {time.time() - start_time:.2f} seconds")
