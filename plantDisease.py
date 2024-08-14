@@ -72,22 +72,17 @@ def display_confusion_matrix(target, predictions, labels=['Healthy', 'Unhealthy'
     ax.set_title(plot_title)
     plt.show()
 
+def time_func(msg, func, *args):
+    start_time = time.time()
+    res = func(*args)
+    print(f"{msg}{time.time() - start_time:.2f} seconds")
+    return res
+
 def main():
-    start_time = time.time()
-    inputs, targets = load_data()
-    print(f"Data loading took: {time.time() - start_time:.2f} seconds")
-
-    start_time = time.time()
-    inputs_train, inputs_test, targets_train, targets_test = preprocess(inputs, targets)
-    print(f"Data preprocessing took: {time.time() - start_time:.2f} seconds")
-
-    start_time = time.time()
-    model = train_model(inputs_train, targets_train)
-    print(f"Model training took: {time.time() - start_time:.2f} seconds")
-
-    start_time = time.time()
-    evaluate_model(model, inputs_test, targets_test)
-    print(f"Model evaluation took: {time.time() - start_time:.2f} seconds")
+    inputs, targets = time_func('Data loading time took: ', load_data)
+    inputs_train, inputs_test, targets_train, targets_test = time_func('Data preprocessing took: ', preprocess, inputs, targets)
+    model = time_func('Model training took: ', train_model, inputs_train, targets_train)
+    time_func('Model evaluation took: ', evaluate_model, model, inputs_test, targets_test)
 
 if __name__ == "__main__":
     main()
