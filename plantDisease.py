@@ -7,24 +7,26 @@ from sklearn.metrics import accuracy_score, confusion_matrix, ConfusionMatrixDis
 import matplotlib.pyplot as plt
 import time
 
+from tqdm import tqdm
+
 def load_data():
     base_path = Path("PlantVillage")
     class_folders = {
         "Pepper__bell___Bacterial_spot": 1,
         "Pepper__bell___healthy": 0,
-        "Potato___Early_blight": 1,
-        "Potato___healthy": 0,
-        "Potato___Late_blight": 1,
-        "Tomato__Target_Spot": 1,
-        "Tomato__Tomato_mosaic_virus": 1,
-        "Tomato__Tomato_YellowLeaf__Curl_Virus": 1,
-        "Tomato_Bacterial_spot": 1,
-        "Tomato_Early_blight": 1,
-        "Tomato_healthy": 0,
-        "Tomato_Late_blight": 1,
-        "Tomato_Leaf_Mold": 1,
-        "Tomato_Septoria_leaf_spot": 1,
-        "Tomato_Spider_mites_Two_spotted_spider_mite": 1
+        # "Potato___Early_blight": 1,
+        # "Potato___healthy": 0,
+        # "Potato___Late_blight": 1,
+        # "Tomato__Target_Spot": 1,
+        # "Tomato__Tomato_mosaic_virus": 1,
+        # "Tomato__Tomato_YellowLeaf__Curl_Virus": 1,
+        # "Tomato_Bacterial_spot": 1,
+        # "Tomato_Early_blight": 1,
+        # "Tomato_healthy": 0,
+        # "Tomato_Late_blight": 1,
+        # "Tomato_Leaf_Mold": 1,
+        # "Tomato_Septoria_leaf_spot": 1,
+        # "Tomato_Spider_mites_Two_spotted_spider_mite": 1
     }
 
     inputs = []
@@ -34,7 +36,7 @@ def load_data():
 
     for folder_name, label in class_folders.items():
         folder_path = base_path / folder_name
-        for filename in sorted(folder_path.iterdir()):
+        for filename in tqdm(sorted(folder_path.iterdir()), desc=f'Processing {folder_name}'):
             img = Image.open(filename).convert('RGB').resize(image_size)
             img = np.array(img).flatten()
             inputs.append(img)
@@ -54,15 +56,15 @@ def preprocess(inputs, targets):
     return inputs_train, inputs_test, targets_train, targets_test
 
 def train_model(inputs_train, targets_train):
-    model = MLPClassifier(random_state=0, max_iter=1000)
+    model = MLPClassifier(random_state=0, max_iter=1000, verbose=1, learning_rate_init=0.01)
     model.fit(inputs_train, targets_train)
     return model
 
-def evaluate_model(model, inputs_test, targets_test):
-    predictions = model.predict(inputs_test)
-    accuracy = accuracy_score(targets_test, predictions)
+def evaluate_model(model, inputs, targets):
+    predictions = model.predict(inputs)
+    accuracy = accuracy_score(targets, predictions)
     print(f'Accuracy: {accuracy:.4f}')
-    display_confusion_matrix(targets_test, predictions)
+    display_confusion_matrix(targets, predictions)
 
 def display_confusion_matrix(target, predictions, labels=['Healthy', 'Unhealthy'], plot_title='Performance'):
     cm = confusion_matrix(target, predictions)
