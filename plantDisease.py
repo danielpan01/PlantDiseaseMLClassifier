@@ -60,11 +60,11 @@ def train_model(inputs_train, targets_train):
     model.fit(inputs_train, targets_train)
     return model
 
-def evaluate_model(model, inputs, targets):
+def evaluate_model(model, data_partition, inputs, targets):
     predictions = model.predict(inputs)
     accuracy = accuracy_score(targets, predictions)
-    print(f'Accuracy: {accuracy:.4f}')
-    display_confusion_matrix(targets, predictions)
+    print(f'{data_partition} Accuracy: {accuracy:.4f}')
+    display_confusion_matrix(targets, predictions, plot_title=f'{data_partition} Performance')
 
 def display_confusion_matrix(target, predictions, labels=['Healthy', 'Unhealthy'], plot_title='Performance'):
     cm = confusion_matrix(target, predictions)
@@ -72,7 +72,8 @@ def display_confusion_matrix(target, predictions, labels=['Healthy', 'Unhealthy'
     fig, ax = plt.subplots()
     cm_display.plot(ax=ax)
     ax.set_title(plot_title)
-    plt.show()
+    plt.savefig('somefile.png')
+    plt.close()
 
 def time_func(msg, func, *args):
     start_time = time.time()
@@ -84,7 +85,8 @@ def main():
     inputs, targets = time_func('Data loading time took: ', load_data)
     inputs_train, inputs_test, targets_train, targets_test = time_func('Data preprocessing took: ', preprocess, inputs, targets)
     model = time_func('Model training took: ', train_model, inputs_train, targets_train)
-    time_func('Model evaluation took: ', evaluate_model, model, inputs_test, targets_test)
+    evaluate_model(model, 'Train', inputs_train, targets_train)
+    evaluate_model(model, 'Test', inputs_test, targets_test)
 
 if __name__ == "__main__":
     main()
