@@ -4,12 +4,10 @@ import numpy as np
 from pathlib import Path
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, confusion_matrix, ConfusionMatrixDisplay
-import time
-import os
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 
-save_dir = 'DataPlotting'
+save_dir = Path('DataPlotting')
 
 def load_data():
     base_path = Path("PlantVillage")
@@ -38,7 +36,8 @@ def load_data():
 
     for folder_name, label in class_folders.items():
         folder_path = base_path / folder_name
-        for filename in tqdm(sorted(folder_path.iterdir()), desc=f'Processing {folder_name}'):
+        filenames = sorted(p for p in folder_path.iterdir() if p.suffix == '.JPG')
+        for filename in tqdm(filenames, desc=f'Processing {folder_name}'):
             img = Image.open(filename).convert('RGB').resize(image_size)
             img = np.array(img).flatten()
             inputs.append(img)
@@ -80,106 +79,51 @@ def display_confusion_matrix(target, predictions, labels=['Healthy', 'Unhealthy'
     fig, ax = plt.subplots()
     cm_display.plot(ax=ax)
     ax.set_title(plot_title)
-    plot_path = os.path.join(save_dir, f'{plot_title.replace(" ", "_")}.png')
+    plot_path = save_dir / f'{plot_title.replace(" ", "_")}.png'
     plt.savefig(plot_path)
     plt.close()
 
-def time_func(msg, func, *args):
-    start_time = time.time()
-    res = func(*args)
-    print(f"{msg}{time.time() - start_time:.2f} seconds")
-    return res
-
-def train_and_plot_learning_rate(init_rates, inputs_train, targets_train):
+def train_and_plot(argname, argvals, inputs_train, targets_train):
     plt.figure(figsize=(12, 8))
 
     models = []
-    for rate in init_rates:
-        print(f"Training with learning_rate_init={rate}")
-        model = train_model(inputs_train, targets_train, learning_rate_init=rate)
-        plt.plot(model.loss_curve_, label=f'LR={rate}')
+    for argval in argvals:
+        print(f"Training with {argname}={argval}")
+        model = train_model(inputs_train, targets_train, **{argname: argval})
+        plt.plot(model.loss_curve_, label=f'{argname}={argval}')
         models.append(model)
 
-    plt.title('Loss Curve for Different Learning Rates')
+    plt.title(f'Loss Curve for Different {argname}')
     plt.xlabel('Iterations')
     plt.ylabel('Loss')
     plt.legend()
     plt.grid(True)
 
-    plt.savefig(os.path.join(save_dir, 'loss_curve_learning_rates.png'))
+    plt.savefig(save_dir / f'loss_curve_{argname}.png')
     plt.show()
 
     return models
 
-def plot_best_losses(models, init_rates):
-    best_losses = [model.loss_curve_[-1] for model in models]
-
+def plot_best_losses(models, argname, argvals):
     plt.figure(figsize=(10, 6))
-    plt.plot(init_rates, best_losses, marker='o')
-    plt.title('Best Loss for Different Learning Rates')
-    plt.xlabel('Learning Rate')
+    plt.plot(range(len(argvals)), [model.best_loss_ for model in models], marker='o')
+    plt.title(f'Best Loss for Different {argname}')
+    plt.xlabel(argname)
     plt.ylabel('Best Loss')
-    plt.xscale('log')
+    plt.xticks(range(len(argvals)), argvals, rotation=45)
+    if argname == 'learning_rate_init':
+        plt.xscale('log')
     plt.grid(True)
 
-    plt.savefig(os.path.join(save_dir, 'best_loss_learning_rates.png'))
+    plt.savefig(save_dir / f'best_loss_{argname}.png')
     plt.show()
 
-def main_learning_rate():
-    inputs, targets = time_func('Data loading time took: ', load_data)
-    inputs_train, inputs_test, targets_train, targets_test = time_func('Data preprocessing took: ', preprocess, inputs,
-                                                                       targets)
-
-    init_rates = [0.0001, 0.001, 0.01, 0.1]
-
-    models = train_and_plot_learning_rate(init_rates, inputs_train, targets_train)
-    plot_best_losses(models, init_rates)
-
-def train_and_plot_hidden_layers(hidden_sizes, inputs_train, targets_train):
-    plt.figure(figsize=(12, 8))
-
-    models = []
-    for hidden_size in hidden_sizes:
-        print(f"Training with hidden_layer_sizes={hidden_size}")
-        model = train_model(inputs_train, targets_train, hidden_layer_sizes=hidden_size)
-        plt.plot(model.loss_curve_, label=f'Hidden Layers={hidden_size}')
-        models.append(model)
-
-    plt.title('Loss Curve for Different Hidden Layer Sizes')
-    plt.xlabel('Iterations')
-    plt.ylabel('Loss')
-    plt.legend()
-    plt.grid(True)
-
-    plt.savefig(os.path.join(save_dir, 'loss_curve_hidden_sizes.png'))
-    plt.show()
-
-    return models
-
-def plot_best_losses_hidden(models, hidden_sizes):
-    best_losses = [model.loss_curve_[-1] for model in models]
-
-    plt.figure(figsize=(10, 6))
-    plt.plot(range(len(hidden_sizes)), best_losses, marker='o')
-    plt.title('Best Loss for Different Hidden Layer Sizes')
-    plt.xlabel('Model Index')
-    plt.ylabel('Best Loss')
-    plt.xticks(range(len(hidden_sizes)), hidden_sizes, rotation=45)
-    plt.grid(True)
-
-    plt.savefig(os.path.join(save_dir, 'best_loss_hidden_sizes.png'))
-    plt.show()
-
-def main_hidden_layers():
-    inputs, targets = time_func('Data loading time took: ', load_data)
-    inputs_train, inputs_test, targets_train, targets_test = time_func('Data preprocessing took: ', preprocess, inputs,
-                                                                       targets)
-
-    hidden_sizes = [(50,), (100,), (50, 50), (100, 50, 25)]
-
-    models = train_and_plot_hidden_layers(hidden_sizes, inputs_train, targets_train)
-    plot_best_losses_hidden(models, hidden_sizes)
+def main(argname, argvals):
+    inputs, targets = load_data()
+    inputs_train, inputs_test, targets_train, targets_test = preprocess(inputs, targets)
+    models = train_and_plot(argname, argvals, inputs_train, targets_train)
+    plot_best_losses(models, argname, argvals)
 
 if __name__ == "__main__":
-    main_learning_rate()
-    main_hidden_layers()
+    main('hidden_layer_sizes', [(50,), (100,), (50, 50), (100, 50, 25)])
+    main('learning_rate_init', [0.0001, 0.001, 0.01, 0.1])
