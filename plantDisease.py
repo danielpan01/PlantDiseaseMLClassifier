@@ -8,6 +8,7 @@ from tqdm import tqdm
 import matplotlib.pyplot as plt
 
 save_dir = Path('DataPlotting')
+save_dir.mkdir(exist_ok=True)
 
 def load_data():
     base_path = Path("PlantVillage")
@@ -67,7 +68,7 @@ def preprocess(inputs, targets):
     inputs_test = inputs_test / np.float32(255.)
     return inputs_train, inputs_test, targets_train, targets_test
 
-def train_model(inputs_train, targets_train, learning_rate_init=0.01, hidden_layer_sizes=(100,)):
+def train_model(inputs_train, targets_train, learning_rate_init=0.001, hidden_layer_sizes=(100,)):
     model = MLPClassifier(
         random_state=0,
         max_iter=1000,
@@ -81,8 +82,17 @@ def train_model(inputs_train, targets_train, learning_rate_init=0.01, hidden_lay
 def evaluate_model(model, data_partition, inputs, targets):
     predictions = model.predict(inputs)
     accuracy = accuracy_score(targets, predictions)
-    print(f'{data_partition} Accuracy: {accuracy:.4f}')
-    display_confusion_matrix(targets, predictions, plot_title=f'{data_partition} Performance')
+    diff_hyperparams = "  ".join((
+        f'{k + ": " + str(v):^35}'
+        for k, v in sorted(
+            set(model.get_params().items()) - set(MLPClassifier().get_params().items())
+        )
+    ))
+    print(
+        f'{data_partition:5s} Accuracy: {accuracy * 100:.3f}%  '
+        f'{diff_hyperparams}'
+    )
+    display_confusion_matrix(targets, predictions, plot_title=f'{data_partition} Confusion Matrix')
 
 def display_confusion_matrix(target, predictions, labels=['Healthy', 'Unhealthy'], plot_title='Performance'):
     cm = confusion_matrix(target, predictions)
@@ -90,7 +100,7 @@ def display_confusion_matrix(target, predictions, labels=['Healthy', 'Unhealthy'
     fig, ax = plt.subplots()
     cm_display.plot(ax=ax)
     ax.set_title(plot_title)
-    plot_path = save_dir / f'{plot_title.replace(" ", "_")}.png'
+    plot_path = save_dir / f'{plot_title.lower().replace(" ", "_")}.png'
     plt.savefig(plot_path)
     plt.close()
 
@@ -111,7 +121,6 @@ def train_and_plot(argname, argvals, inputs_train, targets_train):
     plt.grid(True)
 
     plt.savefig(save_dir / f'loss_curve_{argname}.png')
-    plt.show()
 
     return models
 
@@ -127,12 +136,14 @@ def plot_best_losses(models, argname, argvals):
     plt.grid(True)
 
     plt.savefig(save_dir / f'best_loss_{argname}.png')
-    plt.show()
 
 def main(argname, argvals):
     inputs, targets = load_data()
     inputs_train, inputs_test, targets_train, targets_test = preprocess(inputs, targets)
     models = train_and_plot(argname, argvals, inputs_train, targets_train)
+    for model in models:
+        evaluate_model(model, 'Train', inputs_train, targets_train)
+        evaluate_model(model, 'Test', inputs_test, targets_test)
     plot_best_losses(models, argname, argvals)
 
 if __name__ == "__main__":
