@@ -3,3 +3,5 @@
 PlantVillage
 .DS_Store
 DataPlotting
+*.npz
+*.npy

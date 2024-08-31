@@ -14,37 +14,48 @@ def load_data():
     class_folders = {
         "Pepper__bell___Bacterial_spot": 1,
         "Pepper__bell___healthy": 0,
-        "Potato___Early_blight": 1,
-        "Potato___healthy": 0,
-        "Potato___Late_blight": 1,
-        "Tomato__Target_Spot": 1,
-        "Tomato__Tomato_mosaic_virus": 1,
-        "Tomato__Tomato_YellowLeaf__Curl_Virus": 1,
-        "Tomato_Bacterial_spot": 1,
-        "Tomato_Early_blight": 1,
-        "Tomato_healthy": 0,
-        "Tomato_Late_blight": 1,
-        "Tomato_Leaf_Mold": 1,
-        "Tomato_Septoria_leaf_spot": 1,
-        "Tomato_Spider_mites_Two_spotted_spider_mite": 1
+        # "Potato___Early_blight": 1,
+        # "Potato___healthy": 0,
+        # "Potato___Late_blight": 1,
+        # "Tomato__Target_Spot": 1,
+        # "Tomato__Tomato_mosaic_virus": 1,
+        # "Tomato__Tomato_YellowLeaf__Curl_Virus": 1,
+        # "Tomato_Bacterial_spot": 1,
+        # "Tomato_Early_blight": 1,
+        # "Tomato_healthy": 0,
+        # "Tomato_Late_blight": 1,
+        # "Tomato_Leaf_Mold": 1,
+        # "Tomato_Septoria_leaf_spot": 1,
+        # "Tomato_Spider_mites_Two_spotted_spider_mite": 1
     }
 
-    inputs = []
-    targets = []
+    saved_imgs_path = Path(
+        f'saved_imgs_{"--".join(f"{k}-{v}" for k, v in class_folders.items())}.npz'
+    )
+    if not saved_imgs_path.exists():
+        inputs = []
+        targets = []
 
-    image_size = (128, 128)
+        image_size = (128, 128)
 
-    for folder_name, label in class_folders.items():
-        folder_path = base_path / folder_name
-        filenames = sorted(p for p in folder_path.iterdir() if p.suffix == '.JPG')
-        for filename in tqdm(filenames, desc=f'Processing {folder_name}'):
-            img = Image.open(filename).convert('RGB').resize(image_size)
-            img = np.array(img).flatten()
-            inputs.append(img)
-            targets.append(label)
+        for folder_name, label in class_folders.items():
+            folder_path = base_path / folder_name
+            filenames = sorted(p for p in folder_path.iterdir() if p.suffix == '.JPG')
+            for filename in tqdm(filenames, desc=f'Processing {folder_name}'):
+                img = Image.open(filename).convert('RGB').resize(image_size)
+                img = np.array(img).flatten()
+                inputs.append(img)
+                targets.append(label)
 
-    inputs = np.array(inputs)
-    targets = np.array(targets)
+        inputs = np.array(inputs)
+        targets = np.array(targets)
+        np.savez_compressed(saved_imgs_path, inputs=inputs, targets=targets)
+        print(f'Successfully saved "{str(saved_imgs_path)}"')
+    else:
+        arr = np.load(saved_imgs_path)
+        inputs = arr['inputs']
+        targets = arr['targets']
+        print(f'Loaded "{str(saved_imgs_path)}"')
 
     return inputs, targets
 
