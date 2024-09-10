@@ -151,7 +151,7 @@ def plot_all(models, inputs_train, targets_train, inputs_test, targets_test, arg
             plt.close()
 
 def deep_model_classify(img_paths, targets, batch_size=30):
-    dev = torch.device('cuda') if torch.cuda.is_available else (torch.device('mps') if torch.backends.mps.is_available() else torch.device('cpu'))
+    dev = torch.device('cuda') if torch.cuda.is_available() else (torch.device('mps') if torch.backends.mps.is_available() else torch.device('cpu'))
     model = pipeline("zero-shot-image-classification", model="openai/clip-vit-base-patch16", device=dev)
     predictions = []
     num_batches = len(img_paths) // batch_size + (1 if len(img_paths) % batch_size != 0 else 0)
@@ -188,6 +188,6 @@ def deep_model():
     deep_model_accuracy(predictions, targets)
 
 if __name__ == "__main__":
-    # shallow_model('hidden_layer_sizes', [(50,), (100,), (50, 50), (100, 50, 25)])
-    # shallow_model('learning_rate_init', [0.0001, 0.001, 0.01, 0.1])
-    deep_model()
+    shallow_model('hidden_layer_sizes', [(50,), (100,), (50, 50), (100, 50, 25)])
+    shallow_model('learning_rate_init', [0.0001, 0.001, 0.01, 0.1])
+    #deep_model()
