@@ -1,4 +1,4 @@
-## PlantDiseaseML
+## PlantDiseaseMLClassifier
 
 - Install [Python](www.python.org)
 - `pip3 install scikit-learn matplotlib tqdm`
