@@ -15,17 +15,23 @@ This repository contains the code for a machine learning project focused on the 
 
 ## Getting Started
 
-### Prerequisites
+## Requirements
 
-- Python 3.x
-- Required Python libraries (install via `requirements.txt`):
-  - `numpy`
-  - `scikit-learn`
-  - `Pillow`
-  - `tqdm`
-  - `matplotlib`
-  - `transformers`
-  - `torch`
+The following Python libraries are required for this project:
+
+- [numpy~=2.0.1](https://pypi.org/project/numpy/2.0.1/)
+- [matplotlib~=3.9.1](https://pypi.org/project/matplotlib/3.9.1/)
+- [torch~=2.4.0](https://pypi.org/project/torch/2.4.0/)
+- [scikit-learn~=1.5.1](https://pypi.org/project/scikit-learn/1.5.1/)
+- [pillow~=10.4.0](https://pypi.org/project/Pillow/10.4.0/)
+- [tqdm~=4.66.5](https://pypi.org/project/tqdm/4.66.5/)
+- [transformers~=4.44.2](https://pypi.org/project/transformers/4.44.2/)
+
+You can install all of these dependencies using the `requirements.txt` file provided in this repository:
+
+```bash
+pip install -r requirements.txt
+```
 
 ### Installation
 
