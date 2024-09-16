@@ -31,6 +31,7 @@ You can install all of these dependencies using the `requirements.txt` file prov
 
 ```bash
 pip install -r requirements.txt
+```
 
 ### Installation
 
