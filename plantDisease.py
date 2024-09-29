@@ -106,9 +106,11 @@ def evaluate_model(model, data_partition, inputs, targets):
     )
     return predictions
 
+
 def plot_all(models, inputs_train, targets_train, inputs_test, targets_test, argname, argvals):
     plt.figure(figsize=(12, 8))
 
+    # Plot loss curves for all models
     for model, argval in zip(models, argvals):
         plt.plot(model.loss_curve_, label=f'{argname}={argval}')
     plt.title(f'Loss Curve for Different {argname}')
@@ -119,18 +121,28 @@ def plot_all(models, inputs_train, targets_train, inputs_test, targets_test, arg
     plt.savefig(save_dir / f'loss_curve_{argname}.png')
     plt.close()
 
+    # Plot best loss for all models
     plt.figure(figsize=(10, 6))
-    plt.plot(range(len(argvals)), [model.best_loss_ for model in models], marker='o')
+    best_losses = [min(model.loss_curve_) for model in models]  # Get best loss from loss curve
+
+    if argname == 'learning_rate_init':
+        plt.xscale('log')  # Set log scale for learning rate
+        plt.xticks(argvals, [f"{v:.0e}" for v in argvals], rotation=45)  # Format x-ticks for clarity
+        plt.plot(argvals, best_losses, marker='o')  # Use argvals directly for x-axis
+    else:
+        # Use string representation of hidden_layer_sizes for x-ticks
+        str_argvals = [str(val) for val in argvals]
+        plt.xticks(range(len(argvals)), str_argvals, rotation=45)
+        plt.plot(range(len(argvals)), best_losses, marker='o')  # Use indices for x-axis
+
     plt.title(f'Best Loss for Different {argname}')
     plt.xlabel(argname)
     plt.ylabel('Best Loss')
-    plt.xticks(range(len(argvals)), argvals, rotation=45)
-    if argname == 'learning_rate_init':
-        plt.xscale('log')
     plt.grid(True)
     plt.savefig(save_dir / f'best_loss_{argname}.png')
     plt.close()
 
+    # Plot confusion matrices for all models
     for model in models:
         for data_partition, inputs, targets in [
             ('Train', inputs_train, targets_train),
@@ -200,7 +212,6 @@ def main():
     cm_display = ConfusionMatrixDisplay(cm, display_labels=['Healthy', 'Unhealthy'])
     cm_display.plot()
     plt.title(f'Final Model Confusion Matrix (Hidden Layer={best_hidden_layer_size}, Learning Rate={best_learning_rate})')
-    plt.show()
 
     #deep_model()
 
